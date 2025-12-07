@@ -19,8 +19,9 @@
 
 ## 🚀 Quick Demo
 
-Open `engine.html` in your browser to see the interactive demo.
+**[Try it live!](https://mcarbonell.github.io/chess-movegen-js/engine.html)** 
 
+Or open `engine.html` in your browser locally.
 ## 📦 Usage
 
 ### Basic Initialization

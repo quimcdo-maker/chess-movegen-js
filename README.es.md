@@ -19,7 +19,9 @@
 
 ## 🚀 Demo Rápida
 
-Abre `engine.html` en tu navegador para ver la demo interactiva.
+**[¡Pruebalo ahora!](https://mcarbonell.github.io/chess-movegen-js/engine.html)** 
+
+O abre `engine.html` en tu navegador para ver la demo interactiva.
 
 ## 📦 Uso
 
