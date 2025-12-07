@@ -349,7 +349,7 @@ Este proyecto está bajo la Licencia MIT - ver el archivo LICENSE para más deta
 
 ## 👤 Autor
 
-**Mario R. Carbonell**
+**Mario Raúl Carbonell Martínez**
 
 ---
 

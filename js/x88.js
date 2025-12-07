@@ -342,7 +342,7 @@ class Board {
             }
         }
 
-        console.log(this.history.debug())
+        // console.log(this.history.debug())
         console.assert(false, 'eror en addpiece', color, pieceChar(piece), squareToStr(square))
     }
 
@@ -363,7 +363,7 @@ class Board {
             }
         }
 
-        console.log(this.history.debug())
+        // console.log(this.history.debug())
         console.assert(false, 'eror en movepiece', color, pieceChar(piece), squareToStr(from), squareToStr(to))
         console.assert(false)
     }
@@ -379,7 +379,7 @@ class Board {
             }
         }
 
-        console.log(this.history.debug())
+        // console.log(this.history.debug())
         console.assert(false, 'eror en removepiece', color, square)
     }
 
@@ -1452,7 +1452,7 @@ class Board {
 
         // this.generateMoves()
 
-        this.debug()
+        // this.debug()
 
         return true;
     }
@@ -1564,7 +1564,7 @@ class Board {
         this.stm = opposite(this.stm)
 
         // this.generateMoves()
-        this.debug()
+        // this.debug()
 
         return true
     }
@@ -1897,7 +1897,7 @@ class Board {
         this.movehalfnumber = ((this.movenumber) * 2) + this.stm
 
         // this.generateMoves()
-        this.debug()
+        // this.debug()
     }
 
     getFEN() {
