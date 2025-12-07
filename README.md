@@ -1,6 +1,6 @@
 # Chess Move Generator
 
-> **JavaScript chess move generator with strictly legal move detection**
+> **JavaScript chess move generator with strictly legal move generation**
 
 [![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-yellow.svg)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
