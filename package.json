@@ -7,7 +7,8 @@
     "test": "node tests/perft-test.js --quick",
     "test:full": "node tests/perft-test.js",
     "test:x88": "node tests/perft-test.js --generator x88",
-    "test:bb": "node tests/perft-test.js --generator bb"
+    "test:bb": "node tests/perft-test.js --generator bb",
+    "prepublishOnly": "npm test"
   },
   "repository": {
     "type": "git",
@@ -32,15 +33,13 @@
   "bugs": {
     "url": "https://github.com/mcarbonell/chess-movegen-js/issues"
   },
-  "homepage": "https://github.com/mcarbonell/chess-movegen-js#readme",
+  "homepage": "https://mcarbonell.github.io/chess-movegen-js/",
   "engines": {
     "node": ">=14.0.0"
   },
   "files": [
     "js/x88.js",
-    "js/bitboard.js",
-    "js/engine.js",
-    "js/magic-tables.js",
+    "js/module.js",
     "README.md",
     "README.es.md",
     "LICENSE"

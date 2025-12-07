@@ -2,10 +2,11 @@
 
 > **JavaScript chess move generator with strictly legal move generation**
 
+[![npm version](https://badge.fury.io/js/chess-movegen-js.svg)](https://www.npmjs.com/package/chess-movegen-js)
+[![npm downloads](https://img.shields.io/npm/dm/chess-movegen-js.svg)](https://www.npmjs.com/package/chess-movegen-js)
+[![CI](https://github.com/mcarbonell/chess-movegen-js/actions/workflows/ci.yml/badge.svg)](https://github.com/mcarbonell/chess-movegen-js/actions)
 [![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-yellow.svg)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-
-[![CI](https://github.com/mcarbonell/chess-movegen-js/actions/workflows/ci.yml/badge.svg)](https://github.com/mcarbonell/chess-movegen-js/actions)
 
 **English** | [Español](README.es.md)
 
@@ -24,7 +25,28 @@
 **[Try it live!](https://mcarbonell.github.io/chess-movegen-js/engine.html)** 
 
 Or open `engine.html` in your browser locally.
-## 📦 Usage
+
+## 📦 Installation
+
+### NPM
+
+```bash
+npm install chess-movegen-js
+```
+
+### Usage
+
+```javascript
+const { Board } = require('chess-movegen-js');
+
+const board = new Board();
+board.loadFEN('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+board.generateMoves();
+
+console.log(`Legal moves: ${board.moves.length}`); // 20
+```
+
+## 📖 Usage Examples
 
 ### Basic Initialization
 

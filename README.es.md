@@ -2,6 +2,8 @@
 
 > **Generador de movimientos de ajedrez en JavaScript con detección estrictamente legal**
 
+[![npm version](https://badge.fury.io/js/chess-movegen-js.svg)](https://www.npmjs.com/package/chess-movegen-js)
+[![npm downloads](https://img.shields.io/npm/dm/chess-movegen-js.svg)](https://www.npmjs.com/package/chess-movegen-js)
 [![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-yellow.svg)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
@@ -23,7 +25,27 @@
 
 O abre `engine.html` en tu navegador para ver la demo interactiva.
 
-## 📦 Uso
+## 📦 Instalación
+
+### NPM
+
+```bash
+npm install chess-movegen-js
+```
+
+### Uso
+
+```javascript
+const { Board } = require('chess-movegen-js');
+
+const board = new Board();
+board.loadFEN('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+board.generateMoves();
+
+console.log(`Movimientos legales: ${board.moves.length}`); // 20
+```
+
+## 📖 Ejemplos de Uso
 
 ### Inicialización Básica
 

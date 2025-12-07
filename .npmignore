@@ -1,0 +1,31 @@
+# Exclude from npm package
+experimental/
+tests/
+.github/
+.amazonq/
+*.cpuprofile
+*.log
+
+# Exclude HTML demos (users can see them on GitHub Pages)
+engine.html
+index.html
+
+# Exclude CSS and images (for demos only)
+css/
+img/
+
+# Exclude bitboard implementation (too large, experimental)
+js/bitboard.js
+js/magic-tables.js
+js/engine.js
+js/chess.js
+js/chessboard*.js
+js/jquery*.js
+js/bootstrap*.js
+
+# Only include:
+# - js/x88.js (main implementation)
+# - js/module.js (helper functions)
+# - README.md, README.es.md
+# - LICENSE
+# - package.json
