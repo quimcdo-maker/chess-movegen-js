@@ -531,8 +531,6 @@ function BBbitScanReverse__0(bb) {
     bb |= bb >> 8n
     bb |= bb >> 16n
     bb |= bb >> 32n
-    // bb = BigInt.asUintN(64, (bb * debruijn64) ) >> 58n 
-    // let index = BigInt.asUintN(8, bb ) 
     let index = BigInt.asUintN(64, (bb * debruijn64)) >> 58n
 
     return index64[index];
@@ -652,16 +650,6 @@ function BBbitScanReverse__1(n) {
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -853,7 +841,6 @@ function calckingAttacks(kingSet) {
     attacks |= nortOne(kingSet) | soutOne(kingSet);
 
     if (sq === _h8) {
-        // console.log('calckingAttacks', sq)
         attacks = removeBit(attacks, _a8)
     }
 
@@ -874,18 +861,15 @@ function calcknightAttacks(knights) {
     attacks |= (east | west) >> 8n;
 
     if (bsf(knights) === _g8) {
-        // console.log('calcknightAttacks', bsf(knights))
         attacks = removeBit(attacks, _a8)
     }
 
     if (bsf(knights) === _h8) {
-        // console.log('calcknightAttacks', bsf(knights))
         attacks = removeBit(attacks, _a7)
         attacks = removeBit(attacks, _b8)
     }
 
     return attacks
-    //return BigInt.asUintN(64, attacks)
 }
 
 
@@ -965,19 +949,14 @@ function attacks(sq, occ, attacks) {
     let step2 = byteswap(occ) - arrSquareBit[sq ^ 56]
     let step3 = byteswap(step2)
     return BigInt.asUintN(64, (step1 ^ step3)) & attacks
-    // return BigInt.asUintN(64, ((occ - arrSquareBit[sq]) ^ byteswap(byteswap(occ) - arrSquareBit[sq ^ 56])) & attacks)
 }
 
 function calc_rook_attacks_hq(sq, occ) {
     return attacks(sq, occ, arrFileMask[sq]) | rank_attacks(sq, occ);
-    // return attacks(sq, occ, fileMask(sq)) | rank_attacks(sq, occ);
-    // return file_attacks(sq, occ) | rank_attacks(sq, occ);
 }
 
 function calc_bishop_attacks_hq(sq, occ) {
     return attacks(sq, occ, arrDiagonalMask[sq]) | attacks(sq, occ, arrAntiDiagMask[sq]);
-    // return attacks(sq, occ, diagonalMask(sq)) | attacks(sq, occ, antiDiagMask(sq));
-    // return diag_attacks(sq, occ) | adiag_attacks(sq, occ);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -1305,9 +1284,6 @@ function init_bitboard_tables() {
         arrDiagonalMask[sq] = diagonalMask(sq)
         arrAntiDiagMask[sq] = antiDiagMask(sq)
 
-        // arrRookAttacks[sq] = fileMask(sq) ^ rankMask(sq)
-        // arrBishopAttacks[sq] = diagonalMask(sq) ^ antiDiagMask(sq)
-
         arrRookAttacks[sq] = arrFileMask[sq] ^ arrRankMask[sq]
         arrBishopAttacks[sq] = arrDiagonalMask[sq] ^ arrAntiDiagMask[sq]
 
@@ -1390,9 +1366,6 @@ let sign = [-1, 1]
 
 
 
-
-
-
 class BBBoard {
     // Little-Endian Rank-File Mapping
 
@@ -1413,7 +1386,7 @@ class BBBoard {
     isDraw = false
 
     BBP = [
-        new BigUint64Array(7).fill(0n), // 0 todas las piezas blancas, 1 peones 2 caballos... 6 rey
+        new BigUint64Array(7).fill(0n), // 0 all white pieces, 1 pawns 2 knights... 6 king
         new BigUint64Array(7).fill(0n),
     ]
 
@@ -1442,10 +1415,7 @@ class BBBoard {
     pinD12 = 0n
     pinHV = 0n
 
-
-
     movesbb = []
-    // movesbbStr = []
 
     history = {
         from: new Uint8Array(MAXPLY).fill(0),
@@ -1507,8 +1477,6 @@ class BBBoard {
 
         debug: function () {
 
-            // console.log(this)
-
             let historymoves = []
             historymoves.push('ply: ' + this.ply)
             for (let ply = 0; ply < this.ply; ply++) {
@@ -1532,14 +1500,9 @@ class BBBoard {
         this.movenumber = 0;
         this.movehalfnumber = 0;
 
-        // enemy = 1 - this.stm
-        // numlegalmoves = 0
         this.debugvalue = false
 
-        // moves = []
-        // movesStr = []  
-
-        this.checkingSquare = -1 // casilla desde la que se da el jaque
+        this.checkingSquare = -1 // Square from which check is given
 
         this.numChecks = 0
         this.inCheck = false
@@ -1579,8 +1542,6 @@ class BBBoard {
 
     init_bitboards(board) {
 
-        // let board = engine.board
-
         this.stm = board.stm; // side to move
         this.counter50 = board.counter50;
         this.castlingRights = board.castlingRights;
@@ -1588,14 +1549,8 @@ class BBBoard {
         this.movenumber = board.movenumber;
         this.movehalfnumber = board.movehalfnumber;
 
-        // enemy = 1 - this.stm
-        // numlegalmoves = 0
         this.debugvalue = false
 
-        // moves = []
-        // movesStr = []  
-
-        // this.checkingSquare = -1 // casilla desde la que se da el jaque
         this.numChecks = 0
         this.inCheck = false
         this.inDoubleCheck = false
@@ -1670,7 +1625,6 @@ class BBBoard {
         let chekingpiece = (promotedpiece === 0) ? piece : promotedpiece
         let ischeck = this.piecechecks[side][chekingpiece] & arrSquareBit[to]
         let capturedpiece = (maskbits & mask_capture) ? this.pieceat(to) : empty
-        // let capturedpiece = this.pieceat(to)
 
         if (ischeck) {
             maskbits |= mask_check
@@ -1687,7 +1641,6 @@ class BBBoard {
             capturedpiece: capturedpiece,
             mask: maskbits
         }
-        // Object.seal(move)
         Object.freeze(move)
 
         this.movesbb.push(move)
@@ -1715,7 +1668,6 @@ class BBBoard {
             let from = sq + (8 * turnsign)
             promotions ^= squareBB
 
-            // addbbpawnmove(side, p, sq + (8 * turnsign), sq)
             this.addbbmove(side, p, from, sq, mask_pawnmove | mask_promotion, n)
             this.addbbmove(side, p, from, sq, mask_pawnmove | mask_promotion, b)
             this.addbbmove(side, p, from, sq, mask_pawnmove | mask_promotion, r)
@@ -1798,11 +1750,6 @@ class BBBoard {
 
 
     generate_checkmask() {
-        // this.piecechecks[side][p] = this.generate_pawnattacks(oppside, enemyking)
-        // this.piecechecks[side][n] = arrKnightAttacks[enemykingsq]
-        // this.piecechecks[side][b] = calc_bishop_attacks(enemykingsq, totalocc)
-        // this.piecechecks[side][r] = calc_rook_attacks(enemykingsq, totalocc)
-        // this.piecechecks[side][q] = this.piecechecks[side][b] | this.piecechecks[side][r]
 
         let side = this.stm
         let oppside = opposite(side)
@@ -1815,21 +1762,17 @@ class BBBoard {
         this.piecechecks[oppside][r] = calc_rook_attacks(this.ourkingsq, this.totalocc) & (this.BBP[oppside][r] | this.BBP[oppside][q])
 
         if (this.piecechecks[oppside][p]) {
-            // console.log('jaque de peon')
             this.checkmask &= this.piecechecks[oppside][p]
         }
         if (this.piecechecks[oppside][n]) {
-            // console.log('jaque de caballo')
             this.checkmask &= this.piecechecks[oppside][n]
         }
         if (this.piecechecks[oppside][b]) {
-            // console.log('jaque de alfil o dama')
             let lowestbit = lowestSetBit(this.piecechecks[oppside][b])
             let sq = BBbitScanForward(lowestbit)
             this.checkmask &= arrinBetween[sq][this.ourkingsq] | lowestbit
         }
         if (this.piecechecks[oppside][r]) {
-            // console.log('jaque de torre o dama')
             let lowestbit = lowestSetBit(this.piecechecks[oppside][r])
             let sq = BBbitScanForward(lowestbit)
             this.checkmask &= arrinBetween[sq][this.ourkingsq] | lowestbit
@@ -1855,25 +1798,21 @@ class BBBoard {
         let enemyBQ = calc_bishop_attacks(this.ourkingsq, this.enemyocc) & (this.BBP[oppside][b] | this.BBP[oppside][q])
 
         while (enemyRQ) {
-            // console.log('posible clavada de torre o dama rival')
             let lowestbit = lowestSetBit(enemyRQ)
             let sq = BBbitScanForward(lowestbit)
             let ourpieces = arrinBetween[sq][this.ourkingsq] & this.ourocc
             if (BBbitCount(ourpieces) === 1) {
                 this.pinHV |= arrinBetween[sq][this.ourkingsq] | lowestbit
-                // debug_bitboard(pinHV, 'pinHV confirmada')
             }
             enemyRQ ^= lowestbit
         }
 
         while (enemyBQ) {
-            // console.log('posible clavada de alfil o dama rival')
             let lowestbit = lowestSetBit(enemyBQ)
             let sq = BBbitScanForward(lowestbit)
             let ourpieces = arrinBetween[sq][this.ourkingsq] & this.ourocc
             if (BBbitCount(ourpieces) === 1) {
                 this.pinD12 |= arrinBetween[sq][this.ourkingsq] | lowestbit
-                // debug_bitboard(pinD12, 'pinD12 confirmada')
             }
             enemyBQ ^= lowestbit
         }
@@ -1985,9 +1924,7 @@ class BBBoard {
                     if (!ilegalep) {
                         this.addbbmove(side, p, ourpawnsq, epSquare, mask_ep)
                     } else {
-                        // console.log('ilegal ep', square64ToStr(ourpawnsq), square64ToStr(epSquare))
                     }
-
 
                 }
             }
@@ -2030,8 +1967,6 @@ class BBBoard {
         if (this.numChecks > 1) return
 
         let side = this.stm
-        // let oppside = opposite(side)
-
         let useloop = false
 
         if (!useloop) {
@@ -2164,7 +2099,6 @@ class BBBoard {
                     let f1g1 = arrSquareBit[_f1] | arrSquareBit[_g1]
                     let d1c1 = arrSquareBit[_d1] | arrSquareBit[_c1]
                     let d1c1b1 = d1c1 | arrSquareBit[_b1]
-                    // console.log('e1')
                     if ((this.totalocc & f1g1) === 0n &&
                         (this.enemyattacks & f1g1) === 0n &&
                         (this.BBP[side][r] & arrSquareBit[_h1]) &&
@@ -2182,7 +2116,6 @@ class BBBoard {
                     let f8g8 = arrSquareBit[_f8] | arrSquareBit[_g8]
                     let d8c8 = arrSquareBit[_d8] | arrSquareBit[_c8]
                     let d8c8b8 = d8c8 | arrSquareBit[_b8]
-                    // console.log('e8')
                     if ((this.totalocc & f8g8) === 0n &&
                         (this.enemyattacks & f8g8) === 0n &&
                         (this.BBP[side][r] & arrSquareBit[_h8]) &&
@@ -2227,7 +2160,6 @@ class BBBoard {
         this.ourking = this.BBP[side][k]
         this.ourkingsq = BBbitScanForward(this.ourking)
 
-        // piecechecks[side][p] = pawnattacksleft(oppside, enemyking) | pawnattacksright(oppside, enemyking)
         // piecechecks son las piezas propias que dan jaque
         this.piecechecks[white].fill(0n)
         this.piecechecks[black].fill(0n)
@@ -2252,17 +2184,13 @@ class BBBoard {
 
     makemove(move) {
 
-        // console.log('makemovefrom', move)
         let from = move.from
         let to = move.to
         let capturedpiece = move.capturedpiece
         let promotedpiece = move.promotedpiece
-        // let capturedpiece = this.pieceat(to)
 
         this.history.add(from, to, capturedpiece, promotedpiece, this.counter50, this.castlingRights, this.enpassantSquare)
 
-        // console.log(this.movehalfnumber)
-        // console.log(this.history)
         let boardtopiece = this.pieceat(to)
         let iscapture = boardtopiece != empty
         let movingpiece = this.pieceat(from)
@@ -2301,7 +2229,7 @@ class BBBoard {
             this.counter50 += 1
         }
 
-        // Peon al paso
+        // En passant square
         this.enpassantSquare = -1
         if (ispawnpush) {
             let enemypawn = (this.stm === white) ? bp : wp;
@@ -2313,7 +2241,7 @@ class BBBoard {
             console.assert(
                 (this.stm == white && rank64(from) == rank2 && rank64(to) == rank4) ||
                 (this.stm == black && rank64(from) == rank7 && rank64(to) == rank5),
-                'error al generar una casilla de peon al paso '
+                'error generating en passant square'
             )
         }
 
@@ -2323,30 +2251,28 @@ class BBBoard {
         if ((from == _h8) || (to == _h8)) this.castlingRights &= ~blackcancastleK
 
         if ((from == _e1) && (movingpiece == wk)) {
-            // console.log('before', this.castlingRights)
             if (to == _g1) {
                 console.assert(this.castlingRights && whitecancastleK, 'whitecancastleK')
-                console.assert(this.pieceat(_h1) == wr, 'no hay torre en h1 al hacer enroque')
+                console.assert(this.pieceat(_h1) == wr, 'no rook on h1 when castling')
                 this.movepiece(this.stm, wr, _h1, _f1)
             }
             if (to == _c1) {
                 console.assert(this.castlingRights && whitecancastleQ, 'whitecancastleQ')
-                console.assert(this.pieceat(_a1) == wr, 'no hay torre en a1 al hacer enroque')
+                console.assert(this.pieceat(_a1) == wr, 'no rook on a1 when castling')
                 this.movepiece(this.stm, wr, _a1, _d1)
             }
             this.castlingRights &= ~(whitecancastleQ | whitecancastleK)
         }
 
         if ((from == _e8) && (movingpiece == bk)) {
-            // console.log('before', this.castlingRights)
             if (to == _g8) {
                 console.assert(this.castlingRights && blackcancastleK, 'blackcancastleK')
-                console.assert(this.pieceat(_h8) == br, 'no hay torre en h8 al hacer enroque')
+                console.assert(this.pieceat(_h8) == br, 'no rook on h8 when castling')
                 this.movepiece(this.stm, br, _h8, _f8)
             }
             if (to == _c8) {
                 console.assert(this.castlingRights && blackcancastleK, 'blackcancastleK')
-                console.assert(this.pieceat(_a8) == br, 'no hay torre en a8 al hacer enroque')
+                console.assert(this.pieceat(_a8) == br, 'no rook on a8 when castling')
                 this.movepiece(this.stm, br, _a8, _d8)
             }
             this.castlingRights &= ~(blackcancastleQ | blackcancastleK)
@@ -2356,13 +2282,12 @@ class BBBoard {
             this.removepiece(opposite(this.stm), capturedpiece, to)
         }
 
-        // Aqui realizamos la jugada
+        // Execute the move
         this.movepiece(this.stm, movingpiece, from, to)
 
         if (ispromotion) {
-            console.assert(promotedpiece != empty, 'no hay pieza para coronar')
+            console.assert(promotedpiece != empty, 'no piece to promote to')
             if ((this.stm == white) && (promotedpiece > 8)) promotedpiece -= 8
-            // this.pieceat(to) = promotedpiece
             this.removepiece(this.stm, p, to)
             this.addpiece(this.stm, promotedpiece, to)
         }
@@ -2373,17 +2298,6 @@ class BBBoard {
         }
 
         this.stm = opposite(this.stm)
-
-        // this.enemyattacks = 0n
-        // this.enemychecks = 0n 
-        // this.enemypawnattacks = 0n 
-        // this.enemypieceattacks = 0n 
-        // this.inCheck = false 
-        // this.inDoubleCheck = 0
-        // this.numChecks = 0
-        // this.inCheckMate = false 
-        // this.movesbb = []
-        // this.isDraw = false 
 
         this.debug()
         return true
@@ -2425,7 +2339,6 @@ class BBBoard {
 
     undomove() {
         let undo = this.history.pop()
-        // console.log(undo)
 
         if (undo == false) return false;
 
@@ -2441,16 +2354,13 @@ class BBBoard {
         }
 
         let movingpiece = this.pieceat(undo.to)
-        // let iskingmove = ptype(movingpiece) == k
 
         this.movepiece(this.stm, movingpiece, undo.to, undo.from)
 
         if (undo.capturedpiece) {
             this.addpiece(opposite(this.stm), undo.capturedpiece, undo.to)
         }
-        // this.pieceat[undo.from] = this.pieceat[undo.to]
-        // this.pieceat[undo.to] = undo.capturedpiece
-        console.assert(this.stm === pcolor(movingpiece), 'undomove() la pieza no es del color que mueve')
+        console.assert(this.stm === pcolor(movingpiece), 'undomove() piece color does not match side to move')
         if (this.stm !== pcolor(movingpiece)) {
             console.log(this.history.debug(), square64ToStr(undo.from), square64ToStr(undo.to), movingpiece, this.stm)
             console.log(this.history)
@@ -2461,37 +2371,29 @@ class BBBoard {
         this.castlingRights = undo.castlingRights
         this.enpassantSquare = undo.enpassantSquare
 
-        // if (iskingmove) {
-        // this.kingsquares[pcolor(movingpiece)] = undo.from
-        // }
-
         if (undo.to === undo.enpassantSquare) {
             if (ptype(movingpiece) === p) {
-                // console.log(this.history.debug())
-                // console.log(undo)
                 this.addpiece(opposite(this.stm), p, undo.enpassantSquare - (8 * signo))
-                // console.log('reponiendo un peon capturado al paso', squareToStr(undo.enpassantSquare), squareToStr(undo.to))
             }
-            // console.assert (ptype(movingpiece) === p, 'deshaciendo un al paso que no era de peon', squareToStr(undo.enpassantSquare), squareToStr(undo.to))                        
         }
 
         if ((undo.from == _e1) && (undo.to == _g1) && (movingpiece == wk)) {
-            console.assert(this.pieceat(_f1) == wr, 'no hay torre en f1 al deshacer')
+            console.assert(this.pieceat(_f1) == wr, 'no rook on f1 when undoing')
             this.movepiece(this.stm, wr, _f1, _h1)
         }
 
         if ((undo.from == _e1) && (undo.to == _c1) && (movingpiece == wk)) {
-            console.assert(this.pieceat(_d1) == wr, 'no hay torre en d1 al deshacer')
+            console.assert(this.pieceat(_d1) == wr, 'no rook on d1 when undoing')
             this.movepiece(this.stm, wr, _d1, _a1)
         }
 
         if ((undo.from == _e8) && (undo.to == _g8) && (movingpiece == bk)) {
-            console.assert(this.pieceat(_f8) == br, 'no hay torre en f1 al deshacer')
+            console.assert(this.pieceat(_f8) == br, 'no rook on f8 when undoing')
             this.movepiece(this.stm, wr, _f8, _h8)
         }
 
         if ((undo.from == _e8) && (undo.to == _c8) && (movingpiece == bk)) {
-            console.assert(this.pieceat(_d8) == br, 'no hay torre en d8 al deshacer')
+            console.assert(this.pieceat(_d8) == br, 'no rook on d8 when undoing')
             this.movepiece(this.stm, wr, _d8, _a8)
         }
 
@@ -2499,7 +2401,7 @@ class BBBoard {
         this.movenumber = this.movehalfnumber / 2 >> 0 // truco para convetir a entero        
 
         // this.generateMoves()
-        this.debug()
+        // this.debug()
 
         return true;
     }
@@ -2527,12 +2429,12 @@ class BBBoard {
 
         this.reset()
 
-        // Loads the fen string
-        let file = filea; // columna a..h
-        let rank = rank8; // fila 1..8
+        // Load FEN string
+        let file = filea;
+        let rank = rank8;
         let [fenboard, fenstm, fencastling, fenep, fen50, fenmn] = fenstring.split(' ');
 
-        // Fen Board
+        // Parse board position
         for (let i = 0; i < fenboard.length; i++) {
             let char = fenboard[i];
             if (char === '/') {
@@ -2542,7 +2444,6 @@ class BBBoard {
             }
 
             if (!isNaN(char)) {
-                // this.output(char + ' not is nan');    
                 file += Number(char);
                 continue;
             }
@@ -2558,12 +2459,10 @@ class BBBoard {
             console.assert(piece > 0, ' piece > 0 ')
         }
 
-        // console.log(this.piecesquares)
-
-        // Fen Side to move
+        // Parse side to move
         this.stm = (fenstm === 'w') ? white : black;
 
-        // castling rights
+        // Parse castling rights
         this.castlingRights = 0
         if (fencastling != '-') {
             for (let i = 0; i < fencastling.length; i++) {
@@ -2575,13 +2474,13 @@ class BBBoard {
             }
         }
 
-        // enpassant square
+        // Parse en passant square
         this.enpassantSquare = (fenep == '-') ? -1 : squareto64(squareFromStr(fenep))
 
-        // 50 move counter
+        // Parse 50-move counter
         this.counter50 = (fen50 == '-') ? 0 : Number(fen50)
 
-        // move number
+        // Parse move number
         this.movenumber = (fenmn == '-') ? 1 : Number(fenmn)
         if (this.movenumber == 0) this.movenumber = 1
 

@@ -300,14 +300,13 @@ class Board {
     movenumber = 0;
     movehalfnumber = 0;
 
-    // enemy = 1 - this.stm
-    // numlegalmoves = 0
+    // Debug flag for verbose output
     debugvalue = true
 
     moves = []
     movesStr = []
 
-    checkingSquare = -1 // casilla desde la que se da el jaque
+    checkingSquare = -1 // Square from which check is given
 
     inCheck = false
     inDoubleCheck = false
@@ -342,8 +341,7 @@ class Board {
             }
         }
 
-        // console.log(this.history.debug())
-        console.assert(false, 'eror en addpiece', color, pieceChar(piece), squareToStr(square))
+        console.assert(false, 'error in addpiece', color, pieceChar(piece), squareToStr(square))
     }
 
     movepiece(color, piece, from, to) {
@@ -363,9 +361,7 @@ class Board {
             }
         }
 
-        // console.log(this.history.debug())
-        console.assert(false, 'eror en movepiece', color, pieceChar(piece), squareToStr(from), squareToStr(to))
-        console.assert(false)
+        console.assert(false, 'error in movepiece', color, pieceChar(piece), squareToStr(from), squareToStr(to))
     }
 
     removepiece(color, square) {
@@ -379,38 +375,37 @@ class Board {
             }
         }
 
-        // console.log(this.history.debug())
-        console.assert(false, 'eror en removepiece', color, square)
+        console.assert(false, 'error in removepiece', color, square)
     }
 
 
     attacks = [
-        new Uint8Array(128).fill(0), // tipo de piezas por bando que atacan la casilla
+        new Uint8Array(128).fill(0), // Bitfield of piece types attacking each square by side
         new Uint8Array(128).fill(0)
     ]
 
     numattacks = [
-        new Uint8Array(128).fill(0), // numero de piezas por bando que atacan la casilla
+        new Uint8Array(128).fill(0), // Number of pieces attacking each square by side
         new Uint8Array(128).fill(0)
     ]
 
     inchekValidSquares = [
-        new Uint8Array(128).fill(0), // 1 si casilla valida cuando esta en jaque
+        new Uint8Array(128).fill(0), // Valid squares when in check (blocking or capturing)
         new Uint8Array(128).fill(0)
     ]
 
     pinDirection = [
-        new Int8Array(128).fill(0), // direccion de las clavadas absolutas
+        new Int8Array(128).fill(0), // Direction of absolute pins (0 = not pinned)
         new Int8Array(128).fill(0)
     ]
 
     chekingSquares = [
-        new Uint8Array(128).fill(0),  // se marcan las casillas que podrian dar jaque al rey y el tipo de pieza que daria jaque
+        new Uint8Array(128).fill(0),  // Squares that could give check and piece type that would check
         new Uint8Array(128).fill(0)
     ]
 
     matingSquares = [
-        new Uint8Array(128).fill(0),  // se marcan las casillas que podrian dar mate al rey y el tipo de pieza
+        new Uint8Array(128).fill(0),  // Squares that could give checkmate and piece type
         new Uint8Array(128).fill(0)
     ]
 
@@ -419,14 +414,14 @@ class Board {
         this.attacks[who][to] |= attackbit[piecetype]
         this.numattacks[who][to]++
 
-        // El ataque da jaque
+        // Check if this attack gives check to the enemy king
         if (to === this.kingsquares[1 - who]) {
 
             if ((1 - who) === this.stm) {
-                // console.log('jaque normal detectado', who, squareToStr(from), squareToStr(to))
+                // Normal check detected
                 this.kingschecks[1 - who]++
             } else {
-                // console.log('posicion ilegal, puede comer el rey el turno que mueve', this.stm, squareToStr(to))
+                // Illegal position: king can be captured on opponent's turn
             }
 
             this.checkingSquare = from
@@ -436,8 +431,8 @@ class Board {
 
     addSliderAttack(who, piecetype, from, to, direction) {
 
-        // addSlideAttach se llama cuando un slider de topa con una pieza, propia o rival
-        // Tratamos de detectar el tipo de pieza topada, y continuar el rayo
+        // Called when a sliding piece encounters another piece (friendly or enemy)
+        // Detects the piece type and continues the ray for x-ray attacks and pins
 
         this.attacks[who][to] |= attackbit[piecetype]
         this.numattacks[who][to]++
@@ -447,16 +442,14 @@ class Board {
         // let attackingpiece = this.pieceat[from]
         let attackedpiece = this.pieceat[to]
 
-        // Se topa con el rey rival
-        // El ataque da jaque
+        // Slider attacks enemy king - this is check
         if (to === enemykingsquare) {
-            // console.log('jaque deslizante detectado', squareToStr(from), squareToStr(to))
-            // Añadimos una casilla mas en direccion del jaque detras del rey
+            // Add one more square behind the king in the check direction
             this.attacks[who][to + direction] |= attackbit[piecetype]
             this.numattacks[who][to + direction]++
             this.kingschecks[opossingSide]++
 
-            // Marcamos las casillas que bloquean el rayo como válidas durante jaque
+            // Mark squares that block the ray as valid during check
             do {
                 to -= direction
                 if (!validSquare(to)) break
@@ -466,16 +459,15 @@ class Board {
             return
         }
 
-        // Se topa con una pieza que no es el rey rival
-        // El ataque no da jaque
-        // miramos para ver si puede clavar una pieza contra el rey enemigo
+        // Encounters a piece that is not the enemy king
+        // Check if this could pin a piece against the enemy king
         let difference = from - enemykingsquare;
         let index = difference + 119;
         let offset = RAYS[index];
 
         if (direction === offset) {
-            // la pieza deslizante esta atacando en la direccion que esta el rey enemigo
-            // console.log('posible pieza clavada o descubierta', this.stm,  who, squareToStr(from), squareToStr(to), direction, offset)
+            // The sliding piece is attacking in the direction of the enemy king
+            // Possible pinned piece or discovered check
 
             let piecesinbetween = 0
             let next = to + offset
@@ -487,42 +479,29 @@ class Board {
                 }
                 next = next + offset
             }
-            // console.log('piezas entremedias', piecesinbetween, squareToStr(from), squareToStr(to), squareToStr(enemykingsquare))
+            // Count pieces between slider and enemy king
 
             if (piecesinbetween === 0) {
                 if (pcolor(attackedpiece) === opossingSide) {
                     this.pinDirection[this.stm][to] = offset
-                    // console.log('set pin ', this.stm, squareToStr(to), offset)
-                    // console.log('set pin ', this.pinDirection[this.stm][to])
+                    // Pin detected and recorded
                 } else {
-                    // posible jaque a la descubierta
-                    // this.chekingSquares[who][to] = Math.abs(offset) | mask_discovercheck
-                    // console.log('marcando como descubierta', squareToStr(from), squareToStr(to), Math.abs(offset), this.chekingSquares[who][to])
+                    // Possible discovered check scenario
                 }
             }
         }
 
 
-        // Incrementamos los ataques por rayos x si es una pieza propia que puede desplazarse en la misma direccion
+        // Increment x-ray attacks if it's a friendly piece that can move in the same direction
         let samecolor = (who === pcolor(attackedpiece))
         let bitsok = checkbit[piecetype] & checkbit[ptype(attackedpiece)] & piecebyoffset[Math.abs(direction)]
         let canxray = samecolor && (bitsok > 0)
 
-        /*
-        console.log('canxray', who, pcolor(attackedpiece), samecolor,
-                squareToStr(from), squareToStr(to), 
-                charpieces[piecetype], charpieces[ptype(attackedpiece)], 
-                direction, piecebyoffset[Math.abs(direction)],
-                checkbit[piecetype] & checkbit[ptype(attackedpiece)],
-                bitsok, canxray)
-        */
-
         if (canxray) {
-            // console.log('seguimos el rayo')
-            // ATENCION esto no es jaque doble fen 1r1qr1k1/5p1p/p2p1B2/1p1pn3/2P1P2P/5P2/PP4Q1/1K4R1 b - - 6 30
+            // Continue the ray for x-ray attacks
+            // NOTE: This is not double check - see FEN: 1r1qr1k1/5p1p/p2p1B2/1p1pn3/2P1P2P/5P2/PP4Q1/1K4R1 b - - 6 30
             let next = to + direction
             while (validSquare(next)) {
-                // console.log(squareToStr(next))
                 this.numattacks[who][next]++
                 if (this.pieceat[next] !== empty) {
                     break
@@ -564,44 +543,45 @@ class Board {
         }
     }
 
-    // Añadir movimientos
+    /**
+     * Add a move to the move list with tactical information
+     * Only adds legal moves - checks pins, check evasions, and tactical flags
+     */
     addmove(from, to, maskbits = 0, promotedpiece = 0) {
 
         let movingpiece = this.pieceat[from]
 
-        // Si estamos en jaque, debe ser una de las casillas marcadas como válidas
+        // If in check, move must be to a valid square (block or capture checking piece)
         if (this.inCheck && ptype(movingpiece) !== k && this.inchekValidSquares[this.stm][to] === 0) return
 
-        // Comprobamos que la pieza que queremos mover no este clavada
+        // Check if the piece is pinned
         let pindir = this.pinDirection[this.stm][from]
         if (pindir !== 0) {
 
-            // console.log('intentando mover una pieza clavada en ', squareToStr(from), squareToStr(to), pindir)
+            // Attempting to move a pinned piece
 
             let difference = from - to;
             let index = difference + 119;
             let movedirecction = RAYS[index];
 
             if (Math.abs(pindir) !== Math.abs(movedirecction)) {
-                // console.log('clavada confirmada', this.stm, squareToStr(from), pindir, movedirecction)
+                // Pin confirmed - move is illegal
                 return
             }
-            // console.log('clavada no confirmada', this.stm, squareToStr(from), pindir, movedirecction)
+            // Pin not confirmed - piece can move along pin direction
         }
 
 
         let capturedpiece = (maskbits & mask_ep) ? p : this.pieceat[to]
         let chekingpiece = (maskbits & mask_promotion) ? promotedpiece : movingpiece
 
-        // Marcamos las casillas atacadas por el bando que mueve
-        // this.addattack(this.stm, ptype(movingpiece), from, to)
-
-        // Comprobamos si la jugada da jaque
+        // Check if the move gives check
         if (this.chekingSquares[this.stm][to] & checkbit[chekingpiece]) {
             maskbits |= mask_check
         }
 
-        // Comprobamos si puede ser un enroque que da jaque
+        // Check if castling gives check (rook move)
+        // Example positions:
         // r1bk1b1r/ppp1qppp/5n2/4p1B1/4P3/2N2N2/PPP2PPP/R3KB1R w KQ - 3 9
         // r6r/ppp2kpp/1b6/2B5/4n1BN/2N5/PPP3PP/R3K2R w KQ - 1 19
         if (maskbits & mask_castling) {
@@ -612,19 +592,19 @@ class Board {
             }
         }
 
-        // Comprobamos si la jugada da jaque a la descubierrta
+        // Check if the move gives discovered check
         if (this.chekingSquares[this.stm][from] & mask_discovercheck) {
             let discoverinfo = this.chekingSquares[this.stm][from]
             let offset = discoverinfo & ~mask_discovercheck
             let moveoffset = Math.abs(from - to)
-            // r4bnr/ppp2ppp/n1p5/4P3/3P3q/2N1B3/PPP2P1P/R3K2k w Q - 0 13 ENROQUE JAQUE A LA DESCUBIERTA
+            // Castling with discovered check: r4bnr/ppp2ppp/n1p5/4P3/3P3q/2N1B3/PPP2P1P/R3K2k w Q - 0 13
             if ((moveoffset !== offset) || (maskbits & mask_castling)) {
-                // console.log('jaque a la descubierta en ', squareToStr(from), squareToStr(to), discoverinfo, offset, moveoffset)
+                // Discovered check detected
                 maskbits |= mask_discovercheck
             }
         }
 
-        // Comprobamos si la jugada es a una casilla segura
+        // Check if the destination square is safe (not attacked)
         let attackbits = this.attacks[opposite(this.stm)][to]
         if (attackbits === 0) {
             maskbits |= mask_safe
@@ -633,27 +613,14 @@ class Board {
                 maskbits |= mask_hanging
         }
 
-        // Comprobamos si captura una pieza y si no esta defendida o es de mayor valor
+        // Check if capturing a piece and if it's undefended or higher value
         if (capturedpiece) {
             maskbits |= mask_capture
             if (bitCount(attackbits) == 0) maskbits |= mask_freecapture
             if (ptype(capturedpiece) > ptype(movingpiece)) maskbits |= mask_winningcapture
         }
 
-        // Finalmente almacenamos la jugada junto la información recolectada
-        /*
-                let move = {
-                    from: from,
-                    to: to,            
-                    promotedpiece: promotedpiece,
-                    movingpiece: movingpiece,
-                    captured: capturedpiece,
-                    mask: maskbits
-                }
-                // Object.seal(move)
-                Object.freeze(move)
-                this.moves.push(move)
-        */
+        // Finally store the move with all collected tactical information
         this.moves.push({
             from: from,
             to: to,
@@ -667,10 +634,10 @@ class Board {
 
     addpawnmove(from, to) {
 
-        // Si estamos en jaque, debe ser una de las casillas marcadas como válidas
+        // If in check, must be to a valid square
         if (this.inCheck && this.inchekValidSquares[this.stm][to] === 0) return
 
-        // Si es a la octava fila, es una coronación
+        // If moving to 8th rank, it's a promotion
         if (rank(to) === rank8) {
             this.addmove(from, to, mask_promotion, wn)
             this.addmove(from, to, mask_promotion, wb)
@@ -691,8 +658,10 @@ class Board {
     }
 
 
-    // history = new BigUint64Array(MAXPLY).fill(0n)
-
+    /**
+     * Move history for make/unmake operations
+     * Stores all information needed to reverse a move
+     */
     history = {
         from: new Uint8Array(MAXPLY).fill(0),
         to: new Uint8Array(MAXPLY).fill(0),
@@ -768,11 +737,8 @@ class Board {
     }
 
 
-    // board = Object.seal(this.board)
-    // history = Object.seal(this.history);    
-
     constructor() {
-        // Object.seal(this.board)
+        // Board is ready to use after construction
     }
 
     reset() {
@@ -810,11 +776,18 @@ class Board {
     }
 
 
+    /**
+     * Generate all legal moves for the current position
+     * This is the core algorithm that:
+     * 1. Calculates checking squares and discovered checks
+     * 2. Detects pins and x-ray attacks
+     * 3. Generates only strictly legal moves (no pseudo-moves)
+     * 4. Enriches moves with tactical information
+     */
     generateMoves() {
 
-
         /////////////////////////////////////////////////////////////////////////////////////////////////
-        // INICIALIZACION
+        // INITIALIZATION
         /////////////////////////////////////////////////////////////////////////////////////////////////
         this.attacks[white].fill(0)
         this.attacks[black].fill(0)
@@ -861,7 +834,8 @@ class Board {
         const secondrank = (this.stm === white) ? rank2 : rank7
 
         /////////////////////////////////////////////////////////////////////////////////////////////////
-        // CALCULAMOS LAS CASILLAS QUE DAN JAQUE
+        // CALCULATE CHECKING SQUARES
+        // For each side, mark squares from which pieces could give check to enemy king
         /////////////////////////////////////////////////////////////////////////////////////////////////
         if (true)
             for (let turncolor = white; turncolor <= black; turncolor++) {
@@ -870,7 +844,7 @@ class Board {
                 let offsetsign = (turncolor === white) ? -1 : 1;
                 let oppcolor = 1 - turncolor
 
-                // peon
+                // Pawn checks
                 for (const offset of [17, 15]) {
                     csq = enemyking + (offset * offsetsign)
                     if (csq & 0x88) continue
@@ -878,14 +852,14 @@ class Board {
                         this.chekingSquares[turncolor][csq] |= checkbit[p]
                 }
 
-                // caballo
+                // Knight checks
                 for (const offset of offsets[n]) {
                     if (validSquare(csq = (enemyking + offset)))
                         if (pcolor(this.pieceat[csq]) !== turncolor)
                             this.chekingSquares[turncolor][csq] |= checkbit[n]
                 }
 
-                // alfil o torre
+                // Bishop or rook checks
                 for (let piece of [b, r]) {
                     for (const offset of offsets[piece]) {
                         to = enemyking
@@ -938,8 +912,8 @@ class Board {
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////
-        // CASILLAS ATACADAS POR EL ENEMIGO Y PIEZAS CLAVADAS
-        // Buscamos las casillas atacadas por el jugador rival, y las posibles piezas clavadas
+        // ENEMY ATTACKS AND PINNED PIECES
+        // Calculate squares attacked by opponent and detect pinned pieces
         /////////////////////////////////////////////////////////////////////////////////////////////////
         let turn = opposite(this.stm)
         let enemysign = sign * - 1
@@ -1023,23 +997,15 @@ class Board {
         }
 
         /////////////////////////////////////////////////////////////////////////////////////////////////
-        // NUESTRO TURNO
+        // CHECK STATUS
         /////////////////////////////////////////////////////////////////////////////////////////////////
-        // this.inCheck       = this.numattacks[opposite(this.stm)][this.kingsquares[this.stm]] > 0
-        // this.inDoubleCheck = this.numattacks[opposite(this.stm)][this.kingsquares[this.stm]] > 1
         this.inCheck = this.kingschecks[this.stm] > 0
         this.inDoubleCheck = this.kingschecks[this.stm] > 1
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////
-        // Generamos las jugadas para el jugador que tiene el turno
-        // si no estamos en jaque doble
-        /////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////
-        // EN JAQUE Y SIN JAQUE
+        // GENERATE MOVES FOR SIDE TO MOVE
+        // If not in double check, generate moves for all pieces except king
         /////////////////////////////////////////////////////////////////////////////////////////////////
         if (!this.inDoubleCheck)
             for (sq of this.piecesquares[this.stm]) {
@@ -1058,7 +1024,7 @@ class Board {
                 switch (type) {
                     case p:
 
-                        // Avances de peon
+                        // Pawn advances
                         if (this.pieceat[to = (sq + (16 * sign))] === empty) {
                             this.addpawnmove(sq, to)
 
@@ -1068,7 +1034,7 @@ class Board {
                             }
                         }
 
-                        // Capturas de peon
+                        // Pawn captures
                         for (const offset of [17, 15]) {
                             if (!validSquare(to = (sq + (offset * sign)))) continue
                             this.addattack(this.stm, type, sq, to)
@@ -1077,16 +1043,14 @@ class Board {
                                 this.addpawnmove(sq, to)
                             }
                             if (to === this.enpassantSquare) {
-                                // Para perft
-                                // 8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 
-                                //
-                                // captura al paso clavada por alfil
-                                // 8/1K2p3/8/3P4/8/5b2/6k1/8 b - - 0 1                    
+                                // En passant capture - check for horizontal pin
+                                // Test positions:
+                                // 8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - -
+                                // 8/1K2p3/8/3P4/8/5b2/6k1/8 b - - 0 1
                                 let ilegalep = false
                                 let kingsquare = this.kingsquares[this.stm]
                                 if (rank(sq) === rank(kingsquare)) {
-                                    // La condicion para esta posicion
-                                    // 7k/8/8/K1pP3r/8/8/8/8 w - c6 0 1
+                                    // Check for horizontal pin: 7k/8/8/K1pP3r/8/8/8/8 w - c6 0 1
                                     let dir = (file(kingsquare) < file(sq)) ? 1 : -1
                                     let next = kingsquare + dir
                                     let count = 0
@@ -1100,7 +1064,7 @@ class Board {
                                         count++
                                         if ((count === 3) && ((ptype(piece) === r) | (ptype(piece) === q))
                                             && (pcolor(piece) === opposite(this.stm))) {
-                                            // console.log('captura al paso ilegal confirmada')
+                                            // Illegal en passant confirmed (horizontal pin)
                                             ilegalep = true
                                             break
                                         }
@@ -1108,16 +1072,16 @@ class Board {
                                 }
 
                                 if (!ilegalep) {
-                                    // Si el jaque lo da un peon que puede ser comido al paso, 
-                                    // comerlo es una jugada valida
-                                    // 8/8/3p4/1Pp4r/1K3pk1/8/4P1P1/1R6 w - c6 0 3
+                                    // If check is given by a pawn that can be captured en passant,
+                                    // capturing it is a valid move
+                                    // Example: 8/8/3p4/1Pp4r/1K3pk1/8/4P1P1/1R6 w - c6 0 3
                                     if (this.inCheck) {
                                         let chekingpiece = this.pieceat[this.checkingSquare]
                                         if (ptype(chekingpiece) === p) {
-                                            // marcamos la casilla de comer al paso como valida
+                                            // Mark en passant square as valid
                                             this.inchekValidSquares[this.stm][this.enpassantSquare] = 1
                                             this.addmove(sq, to, mask_ep)
-                                            // y la desmarcamos para que no vayan otras piezas
+                                            // Unmark it so other pieces don't go there
                                             this.inchekValidSquares[this.stm][this.enpassantSquare] = 0
                                         }
                                     } else {
@@ -1131,11 +1095,10 @@ class Board {
 
                         break
 
-                    // saltadoras
+                    // Jumping pieces
                     case n:
-                        // case k: 
 
-                        if (this.pinDirection[this.stm][sq] !== 0) break // un caballo clavado nunca puede mover
+                        if (this.pinDirection[this.stm][sq] !== 0) break // Pinned knight can never move
 
                         for (const offset of offsets[type]) {
                             to = sq + offset
@@ -1151,7 +1114,7 @@ class Board {
 
                         break
 
-                    // deslizadoras
+                    // Sliding pieces
                     case b:
                     case r:
                     case q:
@@ -1191,8 +1154,8 @@ class Board {
             }
 
         /////////////////////////////////////////////////////////////////////////////////////////////////
-        // JUGADAS DEL REY, UNICAS CON JAQUE DOBLE
-        // Por ultimo, las jugadas de nuestro rey
+        // KING MOVES - ONLY MOVES AVAILABLE IN DOUBLE CHECK
+        // Generate moves for our king (always generated, even in double check)
         /////////////////////////////////////////////////////////////////////////////////////////////////
         sq = this.kingsquares[this.stm]
         for (const offset of offsets[k]) {
@@ -1214,7 +1177,7 @@ class Board {
         }
 
         /////////////////////////////////////////////////////////////////////////////////////////////////
-        // MARCAMOS LAS CASILLAS DE ESCAPE DEL REY RIVAL, PARA VER DONDE PODEMOS DARLE MATE
+        // MARK ENEMY KING ESCAPE SQUARES TO DETECT MATING SQUARES
         /////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -1223,18 +1186,9 @@ class Board {
             to = sq + offset
             if (to & 0x88) continue
 
-            // la casilla a la que pretende ir no esta atacada
+            // Square the king wants to move to is not attacked
             if (this.numattacks[this.stm][to] > 0) {
-                // vemos si hay un jaque de contacto de dama
-                /*
-                console.log('vemos si hay un jaque de contacto de dama', 
-                    squareToStr(to), 
-                    this.numattacks[this.stm][to],
-                    this.numattacks[opposite(this.stm)][to],
-                    this.attacks[this.stm][to],
-                    attackbit[q]
-                )
-                */
+                // Check for queen contact check
 
                 if ((this.numattacks[this.stm][to] > 1) &&
                     (this.numattacks[opposite(this.stm)][to] === 1) &&
@@ -1246,7 +1200,7 @@ class Board {
             }
 
             dest = this.pieceat[to]
-            // puede ir a una casilla vacia, o puede comer una pieza nuestra
+            // King can move to empty square or capture our piece
             if ((dest === empty) || pcolor(dest) === this.stm) {
                 let absoffset = Math.abs(offset)
                 const found = this.kingescapes[opposite(this.stm)].find(element => element === absoffset)
@@ -1255,7 +1209,7 @@ class Board {
         }
 
         if (this.kingescapes[opposite(this.stm)].length === 0) {
-            // No tiene escapes, todos los jaques seguros serian (casi) mate
+            // No escape squares - all safe checks would be (almost) mate
             for (let i = 0; i < 128; i++) {
 
                 if (!validSquare(i)) continue
@@ -1264,8 +1218,8 @@ class Board {
 
                 let numdefenders = this.numattacks[opposite(this.stm)][i]
 
-                // Si el numero de defensores es cero, y no esta ocupada por pieza propia
-                // puede estar vacia u ocupada por pieza rival, indefensa
+                // If number of defenders is zero and not occupied by our piece
+                // Can be empty or occupied by undefended enemy piece
                 if ((numdefenders === 0) && (pcolor(this.pieceat[i]) !== this.stm)) {
                     if (this.chekingSquares[this.stm][i] & this.attacks[this.stm][i]) {
                         this.matingSquares[this.stm][i] = this.chekingSquares[this.stm][i]
@@ -1273,8 +1227,7 @@ class Board {
                     continue
                 }
 
-                // Si el numero de defensores es 1, y el de atacantes es mas de 1
-                // y el unico defensor es el rey                
+                // If defenders is 1, attackers > 1, and only defender is the king
                 if ((numdefenders === 1) && (numattackers > 1)) {
                     let kingistheonlydefender = this.attacks[opposite(this.stm)][i] === attackbit[k]
 
@@ -1285,14 +1238,12 @@ class Board {
                 }
             }
         } else if (this.kingescapes[opposite(this.stm)].length === 1) {
-            // Sólo tiene una dirección de escape
+            // King has only one escape direction
             let offset = this.kingescapes[opposite(this.stm)][0]
-            // console.log('rey solo tiene una direccion de escape', opposite(this.stm), squareToStr(sq), offset)
 
             for (let offset2 of [offset, -offset]) {
                 to = sq + offset2
                 while (validSquare(to)) {
-                    // if (this.numattacks[this.stm][to] > 0) continue                            
                     dest = this.pieceat[to]
 
                     if (this.numattacks[this.stm][to] > this.numattacks[opposite(this.stm)][to]) {
@@ -1300,7 +1251,7 @@ class Board {
                     }
 
                     if ((dest === empty) || pcolor(dest) === opposite(this.stm)) {
-                        // console.log('posible mate en ', squareToStr(to))
+                        // Possible mate square
                     }
                     if (dest !== 0) break
                     to = to + offset2
@@ -1312,15 +1263,12 @@ class Board {
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////
-        // Enroques
+        // CASTLING
         /////////////////////////////////////////////////////////////////////////////////////////////////
         if (!this.inCheck) {
-            // console.log('not in check')
             sq = this.kingsquares[this.stm]
             if (this.stm === white) {
-                // console.log('white')
                 if (sq === e1) {
-                    // console.log('e1')
                     if ((this.pieceat[f1] === empty) &&
                         (this.numattacks[opposite(this.stm)][f1] === 0) &&
                         (this.numattacks[opposite(this.stm)][g1] === 0) &&
@@ -1362,31 +1310,17 @@ class Board {
 
 
         /////////////////////////////////////////////////////////////////////////////////////////////////
-        // COMPROBAMOS EL ESTADO DE LA PARTIDA
+        // GAME STATE CHECK (commented out for performance)
         /////////////////////////////////////////////////////////////////////////////////////////////////
-        /*
-        this.numlegalmoves = this.moves.length;
-
-        if (this.numlegalmoves === 0) {
-            if (this.inCheck) {
-                this.inCheckMate = true
-                this.isDraw = false
-                console.log('Checkmate')
-            } else {
-                this.isDraw = this.inStalemate = true                
-                console.log('Stalemate')
-            }
-        } else {
-            if (this.inCheck)       console.log('check')
-            if (this.inDoubleCheck) console.log('double check')
-        }
-        */
 
     }
 
+    /**
+     * Undo the last move made
+     * Restores board state and piece positions
+     */
     undomove() {
         let undo = this.history.pop()
-        // console.log(undo)
 
         if (undo == false) return false;
 
@@ -1398,75 +1332,63 @@ class Board {
         }
 
         let movingpiece = this.pieceat[undo.to]
-        // let iskingmove = ptype(movingpiece) == k
 
         this.movepiece(this.stm, movingpiece, undo.to, undo.from)
 
         if (undo.capturedpiece) {
             this.addpiece(opposite(this.stm), undo.capturedpiece, undo.to)
         }
-        // this.pieceat[undo.from] = this.pieceat[undo.to]
-        // this.pieceat[undo.to] = undo.capturedpiece
-        console.assert(this.stm === pcolor(movingpiece), 'undomove() la pieza no es del color que mueve')
+        console.assert(this.stm === pcolor(movingpiece), 'undomove() piece color does not match side to move')
 
         this.counter50 = undo.counter50
         this.castlingRights = undo.castlingRights
         this.enpassantSquare = undo.enpassantSquare
 
-        // if (iskingmove) {
-        // this.kingsquares[pcolor(movingpiece)] = undo.from
-        // }
+
 
         if (undo.to === undo.enpassantSquare) {
             if (ptype(movingpiece) === p) {
-                // console.log(this.history.debug())
-                // console.log(undo)
+                // Restore captured pawn from en passant
                 this.addpiece(opposite(this.stm), (opposite(this.stm) === white) ? wp : bp, undo.enpassantSquare - (16 * signo))
-                // console.log('reponiendo un peon capturado al paso', squareToStr(undo.enpassantSquare), squareToStr(undo.to))
             }
-            // console.assert (ptype(movingpiece) === p, 'deshaciendo un al paso que no era de peon', squareToStr(undo.enpassantSquare), squareToStr(undo.to))                        
         }
 
+        // Undo castling - move rook back
         if ((undo.from == e1) && (undo.to == g1) && (movingpiece == wk)) {
-            console.assert(this.pieceat[f1] == wr, 'no hay torre en f1 al deshacer')
+            console.assert(this.pieceat[f1] == wr, 'no rook on f1 when undoing')
             this.movepiece(this.stm, wr, f1, h1)
         }
 
         if ((undo.from == e1) && (undo.to == c1) && (movingpiece == wk)) {
-            console.assert(this.pieceat[d1] == wr, 'no hay torre en d1 al deshacer')
+            console.assert(this.pieceat[d1] == wr, 'no rook on d1 when undoing')
             this.movepiece(this.stm, wr, d1, a1)
         }
 
         if ((undo.from == e8) && (undo.to == g8) && (movingpiece == bk)) {
-            console.assert(this.pieceat[f8] == br, 'no hay torre en f1 al deshacer')
+            console.assert(this.pieceat[f8] == br, 'no rook on f8 when undoing')
             this.movepiece(this.stm, wr, f8, h8)
         }
 
         if ((undo.from == e8) && (undo.to == c8) && (movingpiece == bk)) {
-            console.assert(this.pieceat[d8] == br, 'no hay torre en d8 al deshacer')
+            console.assert(this.pieceat[d8] == br, 'no rook on d8 when undoing')
             this.movepiece(this.stm, wr, d8, a8)
         }
 
         this.movehalfnumber -= 1
-        this.movenumber = this.movehalfnumber / 2 >> 0 // truco para convetir a entero        
-
-        // this.generateMoves()
-
-        // this.debug()
+        this.movenumber = this.movehalfnumber / 2 >> 0 // Convert to integer
 
         return true;
     }
 
+    /**
+     * Make a move on the board
+     * Updates board state, castling rights, en passant, and move counters
+     */
     makemove_old(from, to, promotedpiece = 0) {
-
-        // console.log('makemovefrom', to, promotedpiece)
 
         let capturedpiece = this.pieceat[to]
 
         this.history.add(from, to, capturedpiece, promotedpiece, this.counter50, this.castlingRights, this.enpassantSquare)
-
-        // console.log(this.movehalfnumber)
-        // console.log(this.history)
 
         let iscapture = this.pieceat[to] != empty
         let movingpiece = this.pieceat[from]
@@ -1480,12 +1402,11 @@ class Board {
         let ispawnpush = !iscapture && ispawnmove && Math.abs(to - from) == 32
         let ispromotion = ispawnmove && (rank(to) == rank8 || rank(to) == rank1)
         let isenpassant = ispawnmove && to == this.enpassantSquare
-        // let iskingmove = ptype(movingpiece) == k
 
-        console.assert(!ispromotion || promotedpiece > 0, 'pieza que promociona sin ser promocion')
+        console.assert(!ispromotion || promotedpiece > 0, 'promotion without promoted piece')
 
         this.movehalfnumber += 1
-        this.movenumber = this.movehalfnumber / 2 >> 0 // truco para convetir a entero
+        this.movenumber = this.movehalfnumber / 2 >> 0 // Convert to integer
 
         if (iscapture || ispawnmove) {
             this.counter50 = 0
@@ -1493,7 +1414,7 @@ class Board {
             this.counter50 += 1
         }
 
-        // Peon al paso
+        // En passant square
         this.enpassantSquare = -1
         if (ispawnpush) {
             let enemypawn = (this.stm === white) ? bp : wp;
@@ -1505,7 +1426,7 @@ class Board {
             console.assert(
                 (this.stm == white && rank(from) == rank2 && rank(to) == rank4) ||
                 (this.stm == black && rank(from) == rank7 && rank(to) == rank5),
-                'error al generar una casilla de peon al paso '
+                'error generating en passant square'
             )
         }
 
@@ -1514,31 +1435,31 @@ class Board {
         if ((from == a8) || (to == a8)) this.castlingRights &= ~blackcancastleQ
         if ((from == h8) || (to == h8)) this.castlingRights &= ~blackcancastleK
 
+        // White castling
         if ((from == e1) && (movingpiece == wk)) {
-            // console.log('before', this.castlingRights)
             if (to == g1) {
                 console.assert(this.castlingRights && whitecancastleK, 'whitecancastleK')
-                console.assert(this.pieceat[h1] == wr, 'no hay torre en h1 al hacer enroque')
+                console.assert(this.pieceat[h1] == wr, 'no rook on h1 when castling')
                 this.movepiece(this.stm, wr, h1, f1)
             }
             if (to == c1) {
                 console.assert(this.castlingRights && whitecancastleQ, 'whitecancastleQ')
-                console.assert(this.pieceat[a1] == wr, 'no hay torre en a1 al hacer enroque')
+                console.assert(this.pieceat[a1] == wr, 'no rook on a1 when castling')
                 this.movepiece(this.stm, wr, a1, d1)
             }
             this.castlingRights &= ~(whitecancastleQ | whitecancastleK)
         }
 
+        // Black castling
         if ((from == e8) && (movingpiece == bk)) {
-            // console.log('before', this.castlingRights)
             if (to == g8) {
                 console.assert(this.castlingRights && blackcancastleK, 'blackcancastleK')
-                console.assert(this.pieceat[h8] == br, 'no hay torre en h8 al hacer enroque')
+                console.assert(this.pieceat[h8] == br, 'no rook on h8 when castling')
                 this.movepiece(this.stm, br, h8, f8)
             }
             if (to == c8) {
                 console.assert(this.castlingRights && blackcancastleK, 'blackcancastleK')
-                console.assert(this.pieceat[a8] == br, 'no hay torre en a8 al hacer enroque')
+                console.assert(this.pieceat[a8] == br, 'no rook on a8 when castling')
                 this.movepiece(this.stm, br, a8, d8)
             }
             this.castlingRights &= ~(blackcancastleQ | blackcancastleK)
@@ -1551,7 +1472,7 @@ class Board {
         this.movepiece(this.stm, movingpiece, from, to)
 
         if (ispromotion) {
-            console.assert(promotedpiece != empty, 'no hay pieza para coronar')
+            console.assert(promotedpiece != empty, 'no piece to promote to')
             if ((this.stm == white) && (promotedpiece > 8)) promotedpiece -= 8
             this.pieceat[to] = promotedpiece
         }
@@ -1562,9 +1483,6 @@ class Board {
         }
 
         this.stm = opposite(this.stm)
-
-        // this.generateMoves()
-        // this.debug()
 
         return true
     }
@@ -1783,17 +1701,18 @@ class Board {
         this.debugvalue = [1, '1', 'true', 'on', true].includes(debug)
     }
 
+    /**
+     * Performance test - count nodes at given depth
+     * Used for move generation validation
+     */
     perft(depth) {
 
-        // http://www.rocechess.ch/perft.html falla en perft 7 con los caballos 
-        // console.log('perft ', depth)
         this.generateMoves()
         var moves = this.moves
         var nodes = 0
 
         var nmoves = moves.length
         if (depth === 1) return nmoves
-        // if (depth === 0) return 1
 
         for (var i = 0; i < nmoves; i++) {
             this.makemove(moves[i]);
@@ -1804,17 +1723,18 @@ class Board {
         return nodes;
     }
 
+    /**
+     * Divide - perft with move breakdown
+     * Shows node count for each root move
+     */
     divide(depth) {
 
-        // http://www.rocechess.ch/perft.html falla en perft 7 con los caballos 
-        // console.log('perft ', depth)
         this.generateMoves()
         var moves = this.moves
         var nodes = 0
 
         var nmoves = moves.length
         if (depth === 1) return nmoves
-        // if (depth === 0) return 1
 
         for (var i = 0; i < nmoves; i++) {
             this.makemove(moves[i]);
@@ -1828,16 +1748,19 @@ class Board {
     }
 
 
+    /**
+     * Load a position from FEN string
+     * Format: pieces side castling enpassant halfmove fullmove
+     */
     loadFEN(fenstring) {
 
         this.reset()
 
-        // Loads the fen string
-        let file = filea; // columna a..h
-        let rank = rank8; // fila 1..8
+        let file = filea;
+        let rank = rank8;
         let [fenboard, fenstm, fencastling, fenep, fen50, fenmn] = fenstring.split(' ');
 
-        // Fen Board
+        // Parse board position
         this.pieceat.fill(empty);
         this.piecesquares[white].fill(-1)
         this.piecesquares[black].fill(-1)
@@ -1851,7 +1774,6 @@ class Board {
             }
 
             if (!isNaN(char)) {
-                // this.output(char + ' not is nan');    
                 file += Number(char);
                 continue;
             }
@@ -1867,12 +1789,10 @@ class Board {
             console.assert(piece > 0, ' piece > 0 ')
         }
 
-        // console.log(this.piecesquares)
-
-        // Fen Side to move
+        // Parse side to move
         this.stm = (fenstm === 'w') ? white : black;
 
-        // castling rights
+        // Parse castling rights
         this.castlingRights = 0
         if (fencastling != '-') {
             for (let i = 0; i < fencastling.length; i++) {
@@ -1884,20 +1804,17 @@ class Board {
             }
         }
 
-        // enpassant square
+        // Parse en passant square
         this.enpassantSquare = (fenep == '-') ? -1 : squareFromStr(fenep)
 
-        // 50 move counter
+        // Parse 50-move counter
         this.counter50 = (fen50 == '-') ? 0 : Number(fen50)
 
-        // move number
+        // Parse move number
         this.movenumber = (fenmn == '-') ? 1 : Number(fenmn)
         if (this.movenumber == 0) this.movenumber = 1
 
         this.movehalfnumber = ((this.movenumber) * 2) + this.stm
-
-        // this.generateMoves()
-        // this.debug()
     }
 
     getFEN() {
