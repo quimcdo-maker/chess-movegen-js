@@ -21,9 +21,7 @@ movegen/
 │   ├── chess.js           # Librería chess.js
 │   └── ...                # Otras dependencias
 ├── index.html             # Página principal
-├── engine.html            # Demo interactiva con tablero
-├── hello.rs               # Experimentos en Rust
-└── module.wasm            # Experimentos WebAssembly
+└── engine.html            # Demo interactiva con tablero
 ```
 
 ---
@@ -338,12 +336,6 @@ w.postMessage('position fen ' + fen)
 w.postMessage('perft 5')
 ```
 
-### `index.html`
-
-Página de inicio con **roadmap del proyecto**:
-- Proyectos iniciales: Movegen, MakeMove, Perft, Detección de jaques/mates
-- Proyectos avanzados: Evaluación, Árbol en RAM, Monte Carlo, Táctica, Finales
-
 ---
 
 ## 📊 Análisis de Calidad del Código
@@ -448,9 +440,9 @@ var nps = Math.round(1000 * (result / elapsedtime))
 ```
 
 **Perft esperado** (JavaScript en navegador):
-- **Depth 5**: ~100k-500k NPS
-- **Depth 6**: Similar rendimiento
-- **Depth 7**: Dependiente de posición
+- **Depth 5**: ~5 Millones NPS
+- **Depth 6**: ~7 Millones NPS
+- **Depth 7**: ~10 Millones NPS
 
 Para mejorar rendimiento:
 - Considerar transpilación a WebAssembly (hay experimentos `hello.wasm`)
