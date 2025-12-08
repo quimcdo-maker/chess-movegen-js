@@ -39,7 +39,6 @@
   },
   "files": [
     "js/x88.js",
-    "js/module.js",
     "README.md",
     "README.es.md",
     "LICENSE"
